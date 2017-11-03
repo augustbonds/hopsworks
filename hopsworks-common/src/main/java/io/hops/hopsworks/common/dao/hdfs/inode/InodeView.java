@@ -90,7 +90,7 @@ public final class InodeView {
     this.modification
       = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
-    this.shared = ds.isShared();
+    this.shared = !ds.getProjectsSharing().isEmpty();
     this.owningProjectName = parent.inodePK.getName();
     if (this.shared) {
       switch (ds.getType()) {

@@ -98,21 +98,6 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     }
   }
 
-  public List<Project> findProjectSharedWith(Project project, Inode inode) {
-    List<Dataset> datasets = findByInode(inode);
-    if (datasets == null){
-      return null;
-    }
-
-    List<Project> projects = new ArrayList<>();
-    for (Dataset ds : datasets) {
-      if (!ds.getProject().equals(project)) {
-        projects.add(ds.getProject());
-      }
-    }
-    return projects;
-  }
-
   /**
    * Find by project and dataset name
    * <p/>
@@ -169,18 +154,6 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
       .setParameter("state", state)
       .setParameter("shared", shared);
     return query.getResultList();   
-  }
-
-  /**
-   * Finds all data sets shared with a project.
-   * <p/>
-   * @param project
-   * @return
-   */
-  public List<Dataset> findSharedWithProject(Project project) {
-    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findSharedWithProject", Dataset.class).setParameter(
-      "projectId", project);
-    return query.getResultList();
   }
 
   public void persistDataset(Dataset dataset) {

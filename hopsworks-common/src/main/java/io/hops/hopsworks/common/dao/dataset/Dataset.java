@@ -4,6 +4,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -15,6 +16,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -57,10 +60,6 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
           = "SELECT d FROM Dataset d WHERE d.name = :name AND d.project = :projectId"),
-  @NamedQuery(name = "Dataset.findSharedWithProject",
-          query
-          = "SELECT d FROM Dataset d WHERE d.project = :projectId AND "
-                  + "d.shared = true"),
   @NamedQuery(name = "Dataset.findByPublicDsId",
     query = "SELECT d FROM Dataset d WHERE d.publicDsId = :publicDsId")})
 public class Dataset implements Serializable {
@@ -121,10 +120,6 @@ public class Dataset implements Serializable {
   private String publicDsId;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "shared")
-  private boolean shared = false;
-  @Basic(optional = false)
-  @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "dstype")
   private DatasetType type = DatasetType.DATASET;
@@ -132,7 +127,10 @@ public class Dataset implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "dataset")
   private Collection<DatasetRequest> datasetRequestCollection;
-
+  
+  @OneToMany(mappedBy="dataset")
+  private Collection<DatasetProjectAssociation> sharedDatasets;
+  
   public Dataset() {
   }
 
@@ -255,15 +253,7 @@ public class Dataset implements Serializable {
   public void setPublicDsId(String publicDsId) {
     this.publicDsId = publicDsId;
   }
-
-  public boolean isShared() {
-    return shared;
-  }
-
-  public void setShared(boolean shared) {
-    this.shared = shared;
-  }
-
+  
   public void setType(DatasetType type) { this.type = type; }
 
   public DatasetType getType() { return this.type; }
@@ -276,7 +266,7 @@ public class Dataset implements Serializable {
           Collection<DatasetRequest> datasetRequestCollection) {
     this.datasetRequestCollection = datasetRequestCollection;
   }
-
+  
   @Override
   public int hashCode() {
     int hash = 0;

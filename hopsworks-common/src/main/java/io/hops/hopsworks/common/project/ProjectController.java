@@ -1181,7 +1181,7 @@ public class ProjectController {
       TransactionAttributeType.REQUIRES_NEW)
   private void fixSharedDatasets(Project project, DistributedFileSystemOps dfso)
       throws IOException {
-    List<Dataset> sharedDataSets = datasetFacade.findSharedWithProject(project);
+    List<Dataset> sharedDataSets = new ArrayList<Dataset>(project.getSharedDatasets());
     for (Dataset dataSet : sharedDataSets) {
       String owner = dataSet.getInode().getHdfsUser().getName();
       String group = dataSet.getInode().getHdfsGroup().getName();

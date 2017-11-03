@@ -280,7 +280,7 @@ public class DataSetService {
     List<InodeView> kids = new ArrayList<>();
     for (Inode i : cwdChildren) {
       InodeView inodeView = new InodeView(i, fullPath + "/" + i.getInodePK().getName());
-      if (dsPath.getDs().isShared()) {
+      if (project.getSharedDatasets().contains(dsPath.getDs())) {
         //Get project of project__user the inode is owned by
         inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
       }
@@ -354,10 +354,7 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Dataset already in " + proj.getName());
     }
-
-    // Create the new Dataset entry
-    Dataset newDS = new Dataset(ds, proj);
-    newDS.setShared(true);
+    
 
     // if the dataset is not requested or is requested by a data scientist
     // set status to pending. 
@@ -433,7 +430,7 @@ public class DataSetService {
 
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, true);
 
-    List<Project> list = datasetFacade.findProjectSharedWith(project, ds.getInode());
+    List<Project> list = new ArrayList<>(ds.getProjectsSharing());
     GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(
             list) { };
 
@@ -712,11 +709,10 @@ public class DataSetService {
     Dataset ds = dsPath.getDs();
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
 
-    if (ds.isShared()) {
+    if (project.getSharedDatasets().contains(ds)) {
       // The user is trying to delete a dataset. Drop it from the table
       // But leave it in hopsfs because the user doesn't have the right to delete it
       hdfsUsersBean.unShareDataset(project, ds);
-      datasetFacade.removeDataset(ds);
       json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(json).build();
@@ -1332,7 +1328,7 @@ public class DataSetService {
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     Dataset ds = dsPath.getDs();
-    if (ds.isShared() && !ds.isEditable() && !ds.isPublicDs()) {
+    if (project.getSharedDatasets().contains(ds) && !ds.isEditable() && !ds.isPublicDs()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.COMPRESS_ERROR);
     }

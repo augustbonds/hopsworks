@@ -168,6 +168,9 @@ public class Project implements Serializable {
           mappedBy = "projectId")
   private Collection<JupyterProject> jupyterProjectCollection;
   
+  @ManyToMany(mappedBy="projects")
+  private Collection<Dataset> sharedDatasets;
+  
   public Project() {
   }
 
@@ -275,6 +278,14 @@ public class Project implements Serializable {
 
   public void setDeleted(Boolean deleted) {
     this.deleted = deleted;
+  }
+  
+  public Collection<Dataset> getSharedDatasets() {
+    return sharedDatasets;
+  }
+  
+  public void setSharedDatasets(Collection<Dataset> sharedDatasets) {
+    this.sharedDatasets = sharedDatasets;
   }
 
   @Override
