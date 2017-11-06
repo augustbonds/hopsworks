@@ -15,6 +15,7 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetProjectAssociation;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -249,8 +250,8 @@ public class ProjectService {
     if (inode == null) {
       return null;
     }
-    List<Dataset> ds = datasetFacade.findByInode(inode);
-    if(ds !=null && !ds.isEmpty() && !ds.get(0).isSearchable()){
+    Dataset ds = datasetFacade.findByInode(inode);
+    if(ds != null && !ds.isSearchable()){
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
@@ -293,23 +294,19 @@ public class ProjectService {
           ResponseMessages.DATASET_NOT_FOUND);
     }
 
-    Inode parent = inodes.findParent(inode);
-    Project proj = projectFacade.findByName(parent.getInodePK().getName());
-    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
-
+    Dataset ds = datasetFacade.findByInode(inode);
+    
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_FOUND);
     }
-
-    List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
+    
     List<String> sharedWith = new ArrayList<>();
-    for (Dataset d : projectsContainingInode) {
-      if (!d.getProject().getId().equals(proj.getId())) {
-        sharedWith.add(d.getProject().getName());
-      }
+    for (DatasetProjectAssociation datasetProjectAssociation : ds.getSharedWith()) {
+      sharedWith.add(datasetProjectAssociation.getProject().getName());
     }
-    DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
+    
+    DataSetDTO dataset = new DataSetDTO(ds, ds.getProject(), sharedWith);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         dataset).build();
   }
@@ -744,21 +741,12 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_PUBLIC);
     }
-
-    Dataset newDS = new Dataset(inode, destProj);
-    newDS.setShared(true);
-
-    if (ds.getDescription() != null) {
-      newDS.setDescription(ds.getDescription());
-    }
-    if (ds.isPublicDs()) {
-      newDS.setPublicDs(ds.getPublicDs());
-    }
-    newDS.setEditable(false);
-    datasetFacade.persistDataset(newDS);
+    
+    destProj.shareDataset(ds, DatasetProjectAssociation.Status.ACCEPTED);
+    
     Users user = userManager.getUserByEmail(sc.getUserPrincipal().getName());
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString()
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + ds.toString()
         + " with project " + destProj.getName(), destProj, user);
 
     hdfsUsersBean.shareDataset(destProj, ds);

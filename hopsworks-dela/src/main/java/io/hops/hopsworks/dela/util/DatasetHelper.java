@@ -1,7 +1,6 @@
 package io.hops.hopsworks.dela.util;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -22,14 +21,7 @@ public class DatasetHelper {
   }
 
   public static Project getOwningProject(Dataset ds, InodeFacade inodeFacade, ProjectFacade projectFacade) {
-    // If the dataset is not a shared one, just return the project
-    if (!ds.isShared()) {
-      return ds.getProject();
-    }
-
-    // Get the owning project based on the dataset inode
-    Inode projectInode = inodeFacade.findParent(ds.getInode());
-    return projectFacade.findByName(projectInode.getInodePK().getName());
+    return ds.getProject();
   }
 
 }

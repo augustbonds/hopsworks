@@ -56,7 +56,7 @@ public class DsDTOValidator {
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_FOUND);
-    } else if (ds.isShared() ||
+    } else if (!ds.getProject().equals(project) ||
         (ds.isPublicDs() && (!datasetController.getOwningProject(ds).equals(project)))) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_OWNER_ERROR);

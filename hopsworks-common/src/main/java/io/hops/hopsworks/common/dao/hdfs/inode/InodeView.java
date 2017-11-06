@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.dao.hdfs.inode;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetProjectAssociation;
 import io.hops.hopsworks.common.util.Settings;
 import java.util.Date;
 import java.util.Objects;
@@ -76,7 +77,7 @@ public final class InodeView {
    * @param ds
    * @param path
    */
-  public InodeView(Inode parent, Dataset ds, String path) {
+  public InodeView(Inode parent, Dataset ds, String path, boolean shared, DatasetProjectAssociation.Status status) {
     this.name = ds.getInode().getInodePK().getName();
     this.parentId = parent.getId();
     this.dir = ds.getInode().isDir();
@@ -90,7 +91,7 @@ public final class InodeView {
     this.modification
       = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
-    this.shared = ds.isShared();
+    this.shared = shared;
     this.owningProjectName = parent.inodePK.getName();
     if (this.shared) {
       switch (ds.getType()) {
@@ -103,7 +104,7 @@ public final class InodeView {
       this.name = this.owningProjectName + Settings.SHARED_FILE_SEPARATOR + this.name;
     }
     this.description = ds.getDescription();
-    this.status = ds.getStatus();
+    this.status = DatasetProjectAssociation.Status.ACCEPTED.equals(status);
     if (ds.getInode().getHdfsUser() != null) {
       this.owner = ds.getInode().getHdfsUser().getUsername();
     } else {

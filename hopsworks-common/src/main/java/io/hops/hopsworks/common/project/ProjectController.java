@@ -19,6 +19,7 @@ import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ServiceCerts;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetProjectAssociation;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -1403,10 +1404,17 @@ public class ProjectController {
     Inode parent;
     List<InodeView> kids = new ArrayList<>();
 
-    Collection<Dataset> dsInProject = project.getDatasetCollection();
+    Collection<Dataset> dsInProject = project.getOwnedDatasets();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
+      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode()), false, DatasetProjectAssociation.Status
+          .ACCEPTED));
+    }
+    
+    for (DatasetProjectAssociation dsAssociation : project.getSharedDatasets()){
+      Dataset sharedDataset = dsAssociation.getDataset();
+      parent = inodes.findParent(sharedDataset.getInode());
+      kids.add(new InodeView(parent, sharedDataset, inodes.getPath(sharedDataset.getInode()),true,dsAssociation.getStatus() ));
     }
 
     //send the project back to client

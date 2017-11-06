@@ -113,7 +113,7 @@ public class DownloadService {
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     String fullPath = dsPath.getFullPath().toString();
     Dataset ds = dsPath.getDs();
-    if (ds.isShared() && !ds.isEditable() && !ds.isPublicDs()) {
+    if (!ds.getProject().equals(project) && !ds.isEditable() && !ds.isPublicDs()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DOWNLOAD_ERROR);
     }

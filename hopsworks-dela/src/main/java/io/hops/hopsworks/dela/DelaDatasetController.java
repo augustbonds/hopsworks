@@ -78,7 +78,7 @@ public class DelaDatasetController {
   }
 
   public void delete(Project project, Dataset dataset) throws ThirdPartyException {
-    if (dataset.isShared()) {
+    if (!dataset.getProject().equals(project)) {
       //remove the entry in the table that represents shared ds
       //but leave the dataset in hdfs b/c the user does not have the right to delete it.
       hdfsUsersBean.unShareDataset(project, dataset);

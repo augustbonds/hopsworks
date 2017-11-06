@@ -3,6 +3,7 @@ package io.hops.hopsworks.common.elastic;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetProjectAssociation;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
@@ -12,7 +13,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,9 +109,8 @@ public class ElasticController {
           ElasticHit eHit = new ElasticHit(hit);
           eHit.setLocalDataset(true);
           int inode_id = Integer.parseInt(hit.getId());
-          List<Dataset> dsl = datasetFacade.findByInodeId(inode_id);
-          if (!dsl.isEmpty() && dsl.get(0).isPublicDs()) {
-            Dataset ds = dsl.get(0);
+          Dataset ds = datasetFacade.findByInodeId(inode_id);
+          if (ds != null && ds.isPublicDs()) {
             eHit.setPublicId(ds.getPublicDsId());
           }
           elasticHits.add(eHit);
@@ -265,26 +264,19 @@ public class ElasticController {
   private void projectSearchInSharedDatasets(Client client, Integer projectId,
       String searchTerm, List<ElasticHit> elasticHits) {
     Project project = projectFacade.find(projectId);
-    Collection<Dataset> datasets = project.getDatasetCollection();
-    for (Dataset ds : datasets) {
-      if (ds.isShared()) {
-        List<Dataset> dss = datasetFacade.findByInode(ds.getInode());
-        for (Dataset sh : dss) {
-          if (!sh.isShared()) {
-            int datasetId = ds.getInodeId();
-            String ownerProjectId = String.valueOf(sh.getProject().getId());
-
-            executeProjectSearchQuery(client, searchSpecificDataset(datasetId,
-                searchTerm), Settings.META_DATASET_TYPE, ownerProjectId,
-                elasticHits);
-
-            executeProjectSearchQuery(client, datasetSearchQuery(datasetId,
-                searchTerm), Settings.META_INODE_TYPE, ownerProjectId,
-                elasticHits);
-
-          }
-        }
-      }
+    for (DatasetProjectAssociation dsAssociation : project.getSharedDatasets()){
+      Dataset shared = dsAssociation.getDataset();
+      int datasetId = shared.getInodeId();
+      String ownerProjectId = String.valueOf(shared.getProject().getId());
+  
+      executeProjectSearchQuery(client, searchSpecificDataset(datasetId,
+          searchTerm), Settings.META_DATASET_TYPE, ownerProjectId,
+          elasticHits);
+  
+      executeProjectSearchQuery(client, datasetSearchQuery(datasetId,
+          searchTerm), Settings.META_INODE_TYPE, ownerProjectId,
+          elasticHits);
+  
     }
   }
 

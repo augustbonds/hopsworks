@@ -4,6 +4,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -57,17 +58,12 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
           = "SELECT d FROM Dataset d WHERE d.name = :name AND d.project = :projectId"),
-  @NamedQuery(name = "Dataset.findSharedWithProject",
-          query
-          = "SELECT d FROM Dataset d WHERE d.project = :projectId AND "
-                  + "d.shared = true"),
   @NamedQuery(name = "Dataset.findByPublicDsId",
     query = "SELECT d FROM Dataset d WHERE d.publicDsId = :publicDsId")})
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  public static final boolean PENDING = false;
-  public static final boolean ACCEPTED = true;
+
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE)
   @Basic(optional = false)
@@ -110,19 +106,11 @@ public class Dataset implements Serializable {
   private boolean searchable = true;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "status")
-  private boolean status = ACCEPTED;
-  @Basic(optional = false)
-  @NotNull
   @Column(name = "public_ds")
   private int publicDs;
   @Size(max = 1000)
   @Column(name = "public_ds_id")
   private String publicDsId;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "shared")
-  private boolean shared = false;
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.ORDINAL)
@@ -133,6 +121,9 @@ public class Dataset implements Serializable {
           mappedBy = "dataset")
   private Collection<DatasetRequest> datasetRequestCollection;
 
+  @OneToMany(mappedBy = "dataset")
+  private List<DatasetProjectAssociation> sharedWith;
+  
   public Dataset() {
   }
 
@@ -218,14 +209,6 @@ public class Dataset implements Serializable {
     this.searchable = searchable;
   }
 
-  public boolean getStatus() {
-    return status;
-  }
-
-  public void setStatus(boolean status) {
-    this.status = status;
-  }
-
   public boolean isPublicDs() {
     if(publicDs == 0 ) {
       return false;
@@ -256,14 +239,6 @@ public class Dataset implements Serializable {
     this.publicDsId = publicDsId;
   }
 
-  public boolean isShared() {
-    return shared;
-  }
-
-  public void setShared(boolean shared) {
-    this.shared = shared;
-  }
-
   public void setType(DatasetType type) { this.type = type; }
 
   public DatasetType getType() { return this.type; }
@@ -276,7 +251,7 @@ public class Dataset implements Serializable {
           Collection<DatasetRequest> datasetRequestCollection) {
     this.datasetRequestCollection = datasetRequestCollection;
   }
-
+  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -314,7 +289,15 @@ public class Dataset implements Serializable {
   public String toString() {
     return "se.kth.hopsworks.dataset.Dataset[ id=" + id + " ]";
   }
-
+  
+  public List<DatasetProjectAssociation> getSharedWith() {
+    return sharedWith;
+  }
+  
+  public void setSharedWith(List<DatasetProjectAssociation> sharedWith) {
+    this.sharedWith = sharedWith;
+  }
+  
   public static enum SharedState {
     PRIVATE((byte)0),
     CLUSTER((byte)1),

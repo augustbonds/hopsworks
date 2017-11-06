@@ -26,12 +26,11 @@ public class ClusterDatasetController {
     if (dataset.isPublicDs()) {
       return dataset;
     }
-
-    for (Dataset d : datasetFacade.findByInode(dataset.getInode())) {
-      d.setPublicDsState(Dataset.SharedState.CLUSTER);
-      datasetFacade.merge(d);
-      datasetCtrl.logDataset(d, OperationType.Update);
-    }
+    
+    dataset.setPublicDsState(Dataset.SharedState.CLUSTER);
+    datasetFacade.merge(dataset);
+    datasetCtrl.logDataset(dataset, OperationType.Update);
+  
     return dataset;
   }
 
@@ -39,12 +38,10 @@ public class ClusterDatasetController {
     if (!dataset.isPublicDs()) {
       return dataset;
     }
-
-    for (Dataset d : datasetFacade.findByInode(dataset.getInode())) {
-      d.setPublicDsState(Dataset.SharedState.PRIVATE);
-      datasetFacade.merge(d);
-      datasetCtrl.logDataset(d, OperationType.Update);
-    }
+    
+    dataset.setPublicDsState(Dataset.SharedState.PRIVATE);
+    datasetFacade.merge(dataset);
+    datasetCtrl.logDataset(dataset, OperationType.Update);
     return dataset;
   }
 

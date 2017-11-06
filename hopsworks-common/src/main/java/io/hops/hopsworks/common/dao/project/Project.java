@@ -3,6 +3,7 @@ package io.hops.hopsworks.common.dao.project;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -25,6 +26,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import io.hops.hopsworks.common.dao.dataset.DatasetProjectAssociation;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
@@ -167,6 +170,9 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "projectId")
   private Collection<JupyterProject> jupyterProjectCollection;
+  
+  @OneToMany(mappedBy = "project")
+  private List<DatasetProjectAssociation> sharedDatasets;
   
   public Project() {
   }
@@ -321,7 +327,47 @@ public class Project implements Serializable {
   public void setLogs(Boolean logs) {
     this.logs = logs;
   }
-
+  
+  public void shareDataset(Dataset ds, DatasetProjectAssociation.Status status){
+    DatasetProjectAssociation dsAssociation = new DatasetProjectAssociation();
+    dsAssociation.setProjectId(getId());
+    dsAssociation.setProject(this);
+    dsAssociation.setDatasetId(ds.getId());
+    dsAssociation.setDataset(ds);
+    dsAssociation.setStatus(status);
+    
+    ds.getSharedWith().add(dsAssociation);
+    sharedDatasets.add(dsAssociation);
+  }
+  public boolean hasSharedDataset(Dataset ds){
+    if (sharedDatasets != null){
+      for (DatasetProjectAssociation dsAssociation : sharedDatasets){
+        if (dsAssociation.getDataset().equals(ds)){
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  public void unshareDataset(Dataset ds){
+    if (sharedDatasets != null){
+      for (DatasetProjectAssociation dsAssociation : sharedDatasets){
+        if (dsAssociation.getDataset().equals(ds)){
+          sharedDatasets.remove(dsAssociation);
+          ds.getSharedWith().remove(dsAssociation);
+        }
+      }
+    }
+  }
+  public List<DatasetProjectAssociation> getSharedDatasets() {
+    return sharedDatasets;
+  }
+  
+  public void setSharedDatasets(List<DatasetProjectAssociation> sharedDatasets) {
+    this.sharedDatasets = sharedDatasets;
+  }
+  
   @XmlTransient
   @JsonIgnore
   public Collection<ProjectTeam> getProjectTeamCollection() {
@@ -356,11 +402,11 @@ public class Project implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public Collection<Dataset> getDatasetCollection() {
+  public Collection<Dataset> getOwnedDatasets() {
     return datasetCollection;
   }
 
-  public void setDatasetCollection(Collection<Dataset> datasetCollection) {
+  public void setOwnedDatasets(Collection<Dataset> datasetCollection) {
     this.datasetCollection = datasetCollection;
   }
 
@@ -414,4 +460,5 @@ public class Project implements Serializable {
     return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
             + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
   }
+
 }

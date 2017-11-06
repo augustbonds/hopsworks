@@ -295,10 +295,8 @@ public class DatasetController {
    */
   //TODO: Add a reference in each dataset entry to the original dataset
   public void changeEditable(Dataset orgDs, boolean editable) {
-    for (Dataset ds : datasetFacade.findByInode(orgDs.getInode())) {
-      ds.setEditable(editable);
-      datasetFacade.merge(ds);
-    }
+    orgDs.setEditable(editable);
+    datasetFacade.merge(orgDs);
   }
 
   public void recChangeOwnershipAndPermission(Path path, FsPermission permission,
@@ -477,7 +475,7 @@ public class DatasetController {
   }
 
   public void logDataset(Dataset dataset, OperationType type) {
-    if (dataset.isShared() || !dataset.isSearchable()) {
+    if (!dataset.isSearchable()) {
       return;
     }
     operationsLogFacade.persist(new OperationsLog(dataset, type));
@@ -500,15 +498,9 @@ public class DatasetController {
 
   public Project getOwningProject(Dataset ds) {
     // If the dataset is not a shared one, just return the project
-    if (!ds.isShared()) {
-      return ds.getProject();
-    }
-
     switch (ds.getType()) {
       case DATASET:
-        // Get the owning project based on the dataset inode
-        Inode projectInode = inodes.findParent(ds.getInode());
-        return projectFacade.findByName(projectInode.getInodePK().getName());
+        return ds.getProject();
       case HIVEDB:
         // TODO (Fabio) - add hive owner resolution here
         return null;

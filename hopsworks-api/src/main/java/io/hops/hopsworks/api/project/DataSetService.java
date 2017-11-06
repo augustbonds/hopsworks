@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetProjectAssociation;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -234,25 +235,37 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
 
     List<InodeView> kids = new ArrayList<>();
-    Collection<Dataset> dsInProject = this.project.getDatasetCollection();
+    Collection<Dataset> dsInProject = this.project.getOwnedDatasets();
     for (Dataset ds : dsInProject) {
-      String path = datasetController.getDatasetPath(ds).toString();
-      List<Dataset> inodeOccurrence = datasetFacade.findByInodeId(ds.getInodeId());
-      int sharedWith = inodeOccurrence.size() - 1; // -1 for ds itself
-      InodeView inodeView = new InodeView(inodes.findParent(ds.getInode()), ds, path);
-      Users user = userFacade.findByUsername(inodeView.getOwner());
-      if (user != null) {
-        inodeView.setOwner(user.getFname() + " " + user.getLname());
-        inodeView.setEmail(user.getEmail());
-      }
-      inodeView.setSharedWith(sharedWith);
-      kids.add(inodeView);
+      kids.add(findDataSetsInProjectIDHelper(ds, false));
+    }
+    for (DatasetProjectAssociation dsAssociation : project.getSharedDatasets()){
+      kids.add(findDataSetsInProjectIDHelper(dsAssociation.getDataset(), true));
     }
 
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodViews).build();
+  }
+  
+  private InodeView findDataSetsInProjectIDHelper(Dataset ds, boolean shared){
+    String path = datasetController.getDatasetPath(ds).toString();
+  
+    InodeView inodeView = new InodeView(inodes.findParent(ds.getInode()), ds, path, shared);
+  
+    Users user = userFacade.findByUsername(inodeView.getOwner());
+    if (user != null) {
+      inodeView.setOwner(user.getFname() + " " + user.getLname());
+      inodeView.setEmail(user.getEmail());
+    }
+  
+    int numShares = 0;
+    if (ds.getSharedWith() != null){
+      numShares = ds.getSharedWith().size();
+    }
+    inodeView.setSharedWith(numShares);
+    return inodeView;
   }
 
   /**
@@ -280,9 +293,9 @@ public class DataSetService {
     List<InodeView> kids = new ArrayList<>();
     for (Inode i : cwdChildren) {
       InodeView inodeView = new InodeView(i, fullPath + "/" + i.getInodePK().getName());
-      if (dsPath.getDs().isShared()) {
+      if (!dsPath.getDs().getProject().equals(project)) {
         //Get project of project__user the inode is owned by
-        inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
+        inodeView.setOwningProjectName(dsPath.getDs().getProject().getName());
       }
       inodeView.setUnzippingState(settings.getUnzippingState(
               fullPath + "/" + i.getInodePK().getName()));
@@ -349,27 +362,23 @@ public class DataSetService {
           ResponseMessages.PROJECT_NOT_FOUND);
     }
 
-    Dataset dst = datasetFacade.findByProjectAndInode(proj, ds.getInode());
-    if (dst != null) {//proj already have the dataset.
+    
+    if (proj.hasSharedDataset(ds)){
+      //proj already have the dataset.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Dataset already in " + proj.getName());
     }
-
-    // Create the new Dataset entry
-    Dataset newDS = new Dataset(ds, proj);
-    newDS.setShared(true);
 
     // if the dataset is not requested or is requested by a data scientist
     // set status to pending. 
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);
     if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(
             AllowedRoles.DATA_SCIENTIST)) {
-      newDS.setStatus(Dataset.PENDING);
+      proj.shareDataset(ds, DatasetProjectAssociation.Status.PENDING);
     } else {
       hdfsUsersBean.shareDataset(proj, ds);
+      proj.shareDataset(ds, DatasetProjectAssociation.Status.ACCEPTED);
     }
-
-    datasetFacade.persistDataset(newDS);
 
     if (dsReq != null) {
       datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
@@ -395,27 +404,18 @@ public class DataSetService {
 
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     JsonResponse json = new JsonResponse();
-
+    
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, true);
-
-    for (int projectId : dataSet.getProjectIds()) {
-      Project proj = projectFacade.find(projectId);
-      if (proj == null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.PROJECT_NOT_FOUND);
-      }
-
-      Dataset dst = datasetFacade.findByProjectAndInode(proj, ds.getInode());
-      if (dst == null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Dataset not shared with " + proj.getName());
-      }
-
-      hdfsUsersBean.unshareDataset(proj, ds);
-      datasetFacade.removeDataset(dst);
+  
+    for (DatasetProjectAssociation datasetProjectAssociation : ds.getSharedWith()) {
+      Project sharedWith = datasetProjectAssociation.getProject();
+      hdfsUsersBean.unshareDataset(sharedWith, ds);
+      ds.getSharedWith().remove(datasetProjectAssociation);
+      project.unshareDataset(ds);
       activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.
-              getName() + " with project " + proj.getName(), project, user);
+          getName() + " with project " + sharedWith.getName(), project, user);
     }
+    
     json.setSuccessMessage("The Dataset was successfully unshared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -572,15 +572,21 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-
-    Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-
-    if (ds == null) {
+  
+    boolean wasUnshared = false;
+    for (DatasetProjectAssociation datasetProjectAssociation : project.getSharedDatasets()) {
+      if (datasetProjectAssociation.getDataset().getInode().equals(inode)){
+        project.unshareDataset(datasetProjectAssociation.getDataset());
+        wasUnshared = true;
+        break;
+      }
+    }
+    
+    if (!wasUnshared){
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
 
-    datasetFacade.remove(ds);
     json.setSuccessMessage("The Dataset has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -712,11 +718,11 @@ public class DataSetService {
     Dataset ds = dsPath.getDs();
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
 
-    if (ds.isShared()) {
+    if (!ds.getProject().equals(project)) {
       // The user is trying to delete a dataset. Drop it from the table
       // But leave it in hopsfs because the user doesn't have the right to delete it
       hdfsUsersBean.unShareDataset(project, ds);
-      datasetFacade.removeDataset(ds);
+      project.unshareDataset(ds);
       json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(json).build();
@@ -1332,7 +1338,7 @@ public class DataSetService {
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     Dataset ds = dsPath.getDs();
-    if (ds.isShared() && !ds.isEditable() && !ds.isPublicDs()) {
+    if (!ds.getProject().equals(project) && !ds.isEditable() && !ds.isPublicDs()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.COMPRESS_ERROR);
     }

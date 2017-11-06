@@ -61,7 +61,7 @@ public class DelaWorkerController {
     if (dataset.isPublicDs()) {
       return dataset.getPublicDsId();
     }
-    if (dataset.isShared()) {
+    if (!dataset.getProject().equals(project)) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(),
         "dataset shared - only owner can publish", ThirdPartyException.Source.LOCAL, "bad request");
     }

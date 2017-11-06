@@ -51,18 +51,26 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
    * @param inode
    * @return
    */
-  public List<Dataset> findByInode(Inode inode) {
+  public Dataset findByInode(Inode inode) {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByInode",
       Dataset.class).setParameter(
         "inode", inode);
-    return query.getResultList();
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
-  public List<Dataset> findByInodeId(int inodeId) {
+  public Dataset findByInodeId(int inodeId) {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByInodeId",
       Dataset.class).setParameter(
         "inodeId", inodeId);
-    return query.getResultList();
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
   public Optional<Dataset> findByPublicDsIdProject(String publicDsId, Project project) {
@@ -99,18 +107,12 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   }
 
   public List<Project> findProjectSharedWith(Project project, Inode inode) {
-    List<Dataset> datasets = findByInode(inode);
-    if (datasets == null){
-      return null;
+    Dataset datasets = findByInode(inode);
+    List<Project> sharedWith = new ArrayList<>();
+    for (DatasetProjectAssociation datasetProjectAssociation : datasets.getSharedWith()) {
+      sharedWith.add(datasetProjectAssociation.getProject());
     }
-
-    List<Project> projects = new ArrayList<>();
-    for (Dataset ds : datasets) {
-      if (!ds.getProject().equals(project)) {
-        projects.add(ds.getProject());
-      }
-    }
-    return projects;
+    return sharedWith;
   }
 
   /**
