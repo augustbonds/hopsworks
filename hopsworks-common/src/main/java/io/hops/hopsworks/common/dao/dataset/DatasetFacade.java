@@ -94,7 +94,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     }
   }
 
-  public Dataset findByNameAndProjectId(Project project, String name) {
+  public Dataset findByNameAndProjectIdGottaFix(Project project, String name) {
     TypedQuery<Dataset> query = em.createNamedQuery(
       "Dataset.findByNameAndProjectId",
       Dataset.class);

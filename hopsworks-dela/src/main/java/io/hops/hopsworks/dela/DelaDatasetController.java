@@ -105,7 +105,7 @@ public class DelaDatasetController {
 
     datasetCtrl.createDataset(user, project, name, description, templateId, searchable, defaultDataset, 
       dfs.getDfsOps());
-    Dataset dataset = datasetFacade.findByNameAndProjectId(project, name);
+    Dataset dataset = datasetFacade.findByNameAndProjectIdGottaFix(project, name);
     return dataset;
   }
   

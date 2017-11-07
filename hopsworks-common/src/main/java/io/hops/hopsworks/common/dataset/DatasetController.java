@@ -163,7 +163,7 @@ public class DatasetController {
         //set the dataset meta enabled. Support 3 level indexing
         if (searchable) {
           dfso.setMetaEnabled(dsPath);
-          Dataset logDs = datasetFacade.findByNameAndProjectId(project, dataSetName);
+          Dataset logDs = datasetFacade.findByNameAndProjectIdGottaFix(project, dataSetName);
           logDataset(logDs, OperationType.Add);
         }
       } catch (Exception e) {

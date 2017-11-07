@@ -196,8 +196,20 @@ public class ElasticController {
     } else {
       project = projectFacade.find(projectId);
     }
+    
+    Dataset dataset = null;
+    //get dataset id:
+    for (Dataset ds : project.getOwnedDatasets()) {
+      if(ds.getName().equals(dsName)){
+        dataset = ds;
+        break;
+      }
+    }
+    
+    if(dataset == null){
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), "Dataset not found.");
+    }
 
-    Dataset dataset = datasetFacade.findByNameAndProjectId(project, dsName);
     final int datasetId = dataset.getInodeId();
 
     //hit the indices - execute the queries

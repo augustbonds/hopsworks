@@ -237,10 +237,10 @@ public class DataSetService {
     List<InodeView> kids = new ArrayList<>();
     Collection<Dataset> dsInProject = this.project.getOwnedDatasets();
     for (Dataset ds : dsInProject) {
-      kids.add(findDataSetsInProjectIDHelper(ds, false));
+      kids.add(findDataSetsInProjectIDHelper(ds, false, null));
     }
     for (DatasetProjectAssociation dsAssociation : project.getSharedDatasets()){
-      kids.add(findDataSetsInProjectIDHelper(dsAssociation.getDataset(), true));
+      kids.add(findDataSetsInProjectIDHelper(dsAssociation.getDataset(), true, dsAssociation.getStatus()));
     }
 
     GenericEntity<List<InodeView>> inodViews
@@ -249,10 +249,10 @@ public class DataSetService {
             inodViews).build();
   }
   
-  private InodeView findDataSetsInProjectIDHelper(Dataset ds, boolean shared){
+  private InodeView findDataSetsInProjectIDHelper(Dataset ds, boolean shared, DatasetProjectAssociation.Status status){
     String path = datasetController.getDatasetPath(ds).toString();
   
-    InodeView inodeView = new InodeView(inodes.findParent(ds.getInode()), ds, path, shared);
+    InodeView inodeView = new InodeView(inodes.findParent(ds.getInode()), ds, path, shared, status);
   
     Users user = userFacade.findByUsername(inodeView.getOwner());
     if (user != null) {
@@ -541,18 +541,20 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-
-    Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-    if (ds == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
-    }
-    hdfsUsersBean.shareDataset(this.project, ds);
-    ds.setStatus(Dataset.ACCEPTED);
-    datasetFacade.merge(ds);
-    json.setSuccessMessage("The Dataset is now accessable.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+  
+    for (DatasetProjectAssociation datasetProjectAssociation : project.getSharedDatasets()) {
+      Dataset ds = datasetProjectAssociation.getDataset();
+      if(ds.getInode().equals(inode)){
+        project.shareDataset(ds, DatasetProjectAssociation.Status.ACCEPTED);
+        hdfsUsersBean.shareDataset(this.project, ds);
+        json.setSuccessMessage("The Dataset is now accessable.");
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
+      }
+    }
+    
+    throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            ResponseMessages.DATASET_NOT_FOUND);
   }
 
   @GET
@@ -1447,7 +1449,8 @@ public class DataSetService {
     if (p == null) {
       throw new IllegalArgumentException("Project not found.");
     }
-    Dataset ds = datasetFacade.findByNameAndProjectId(p, parentDs);
+    
+    Dataset ds = p.getOwnedOrSharedDatasetByName(parentDs);
     if (ds != null && ds.isPublicDs()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
         "Can not copy/move to a public dataset.");

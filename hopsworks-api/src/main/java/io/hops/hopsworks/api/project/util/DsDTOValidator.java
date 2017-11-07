@@ -51,7 +51,7 @@ public class DsDTOValidator {
     }
 
     // Check if the dataset exists and user can share it
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, dto.getName());
+    Dataset ds = project.getOwnedOrSharedDatasetByName(dto.getName());
 
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

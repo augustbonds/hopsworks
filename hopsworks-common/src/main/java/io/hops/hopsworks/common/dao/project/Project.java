@@ -350,6 +350,24 @@ public class Project implements Serializable {
     return false;
   }
   
+  public Dataset getOwnedOrSharedDatasetByName(String name){
+    if(getOwnedDatasets() != null){
+      for (Dataset ds : getOwnedDatasets()){
+        if (ds.getName().equals(name)){
+          return ds;
+        }
+      }
+    }
+    if(getSharedDatasets() != null){
+      for (DatasetProjectAssociation ds : getSharedDatasets()){
+        if (ds.getDataset().getName().equals(name)){
+          return ds.getDataset();
+        }
+      }
+    }
+    return null;
+  }
+  
   public void unshareDataset(Dataset ds){
     if (sharedDatasets != null){
       for (DatasetProjectAssociation dsAssociation : sharedDatasets){

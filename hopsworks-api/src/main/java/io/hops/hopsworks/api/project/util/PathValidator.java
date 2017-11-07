@@ -3,6 +3,7 @@ package io.hops.hopsworks.api.project.util;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetProjectAssociation;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -67,6 +68,7 @@ public class PathValidator {
     String dsName = pathComponents[0];
     boolean shared = false;
 
+    Dataset ds = null;
     if (pathComponents[0].contains(Settings.SHARED_FILE_SEPARATOR)) {
       //we can split the string and get the project name
       String[] shardDS = pathComponents[0].split(Settings.SHARED_FILE_SEPARATOR);
@@ -76,19 +78,32 @@ public class PathValidator {
       }
       dsName = shardDS[1];
       shared = true;
+  
+      for (DatasetProjectAssociation datasetProjectAssociation : project.getSharedDatasets()) {
+        if (datasetProjectAssociation.getDataset().getName().equals(dsName)){
+          if (DatasetProjectAssociation.Status.PENDING.equals(datasetProjectAssociation.getStatus())){
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.DATASET_PENDING);
+          }
+          ds = datasetProjectAssociation.getDataset();
+          
+          break;
+        }
+      }
+    } else {
+      for (Dataset dataset : project.getOwnedDatasets()) {
+        if (dataset.getName().equals(dsName)){
+          ds = dataset;
+          break;
+        }
+      }
     }
-
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, dsName);
+    
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_FOUND);
     }
-
-    // If the dataset is shared, make sure that the user can access it
-    if (shared && (ds.getStatus() == Dataset.PENDING)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_PENDING);
-    }
+    
     dsPath.setDs(ds);
 
     String dsRelativePathStr = buildRelativePath(pathComponents, 1,
@@ -113,7 +128,7 @@ public class PathValidator {
           ResponseMessages.PROJECT_NOT_FOUND);
     }
 
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, pathComponents[3]);
+    Dataset ds = datasetFacade.findByNameAndProjectIdGottaFix(project, pathComponents[3]);
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_FOUND);

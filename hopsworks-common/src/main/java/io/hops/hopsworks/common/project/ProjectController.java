@@ -1414,7 +1414,8 @@ public class ProjectController {
     for (DatasetProjectAssociation dsAssociation : project.getSharedDatasets()){
       Dataset sharedDataset = dsAssociation.getDataset();
       parent = inodes.findParent(sharedDataset.getInode());
-      kids.add(new InodeView(parent, sharedDataset, inodes.getPath(sharedDataset.getInode()),true,dsAssociation.getStatus() ));
+      kids.add(new InodeView(parent, sharedDataset, inodes.getPath(sharedDataset.getInode()),
+          true,dsAssociation.getStatus() ));
     }
 
     //send the project back to client
