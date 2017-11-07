@@ -57,9 +57,9 @@ import java.util.logging.Logger;
 @Api(value = "V2 Projects")
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProjectsResource {
+public class ProjectsResourceOld {
   
-  private final static Logger logger = Logger.getLogger(ProjectsResource.class.getName());
+  private final static Logger logger = Logger.getLogger(ProjectsResourceOld.class.getName());
   
   @EJB
   private ProjectFacade projectFacade;
@@ -98,7 +98,7 @@ public class ProjectsResource {
       //Create full project views for admins
       List<ProjectView> projectRests = new ArrayList<>();
       for (Project project : projectFacade.findAll()){
-        projectRests.add(ProjectViewKt.ProjectView(project));
+        projectRests.add(ProjectsResourceKt.ProjectView(project));
       }
       GenericEntity<List<ProjectView>> projects = new GenericEntity<List<ProjectView>>(projectRests){};
       return Response.ok(projects,MediaType.APPLICATION_JSON_TYPE).build();
@@ -150,7 +150,7 @@ public class ProjectsResource {
       json.setFieldErrors(failedMembers);
     }
   
-    URI uri = UriBuilder.fromResource(ProjectsResource.class).path("{id}").build(project.getId());
+    URI uri = UriBuilder.fromResource(ProjectsResourceOld.class).path("{id}").build(project.getId());
     logger.info("Created uri: " + uri.toString());
   
     return Response.created(uri).entity(json).build();
@@ -242,7 +242,7 @@ public class ProjectsResource {
         dfs.closeDfsClient(udfso);
       }
     }
-    URI uri = UriBuilder.fromResource(ProjectsResource.class).path("{id}").build(project.getId());
+    URI uri = UriBuilder.fromResource(ProjectsResourceOld.class).path("{id}").build(project.getId());
     logger.info("Created uri: " + uri.toString());
   
     return Response.created(uri).entity(project).build();

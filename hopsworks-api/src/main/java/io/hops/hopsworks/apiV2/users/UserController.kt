@@ -32,4 +32,8 @@ class UserController {
     fun findAll() :List<Users> {
         return userFacade.findAll()
     }
+
+    fun findByEmail(name: String): Users {
+        return userFacade.findByEmail(name)
+    }
 }

@@ -18,7 +18,7 @@
 package io.hops.hopsworks.apiV2.filter;
 
 import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.apiV2.projects.ProjectsResource;
+import io.hops.hopsworks.apiV2.projects.ProjectsResourceOld;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -57,7 +57,7 @@ public class ProjectAuthFilter extends ApiV2FilterBase {
   
   @Override
   protected void filterInternal(ContainerRequestContext requestContext) throws IOException {
-    if (resourceInfo.getResourceClass() == ProjectsResource.class) {
+    if (resourceInfo.getResourceClass() == ProjectsResourceOld.class) {
       //Only filter projects-endpoint calls.
       String path = requestContext.getUriInfo().getPath();
       String[] pathParts = path.split("/");

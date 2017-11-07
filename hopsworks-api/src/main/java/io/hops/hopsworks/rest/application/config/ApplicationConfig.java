@@ -1,6 +1,7 @@
 package io.hops.hopsworks.rest.application.config;
 
 import io.hops.hopsworks.apiV2.projects.PathValidatorV2;
+import io.hops.hopsworks.apiV2.projects.ProjectsResourceOld;
 import io.hops.hopsworks.apiV2.users.UsersResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -81,7 +82,7 @@ public class ApplicationConfig extends ResourceConfig {
     //API V2
     //Projects & Datasets
     register(io.hops.hopsworks.apiV2.filter.ProjectAuthFilter.class);
-    register(io.hops.hopsworks.apiV2.projects.ProjectsResource.class);
+    register(ProjectsResourceOld.class);
     register(io.hops.hopsworks.apiV2.projects.DatasetsResource.class);
     register(io.hops.hopsworks.apiV2.projects.MembersResource.class);
     register(io.hops.hopsworks.apiV2.projects.BlobsResource.class);

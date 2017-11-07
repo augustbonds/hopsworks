@@ -24,8 +24,8 @@ import io.hops.hopsworks.common.exception.AppException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import java.net.URI
+import javax.ws.rs.core.SecurityContext
 
-@Throws(AppException::class)
 fun except(status: Response.Status, msg: String) {
     throw AppException(status.statusCode, msg)
 }
@@ -38,3 +38,6 @@ fun jsonCreated(location: URI, entity: Any): Response {
     return Response.created(location).entity(entity).type(MediaType.APPLICATION_JSON_TYPE).build()
 }
 
+fun isAdmin(sc: SecurityContext): Boolean {
+    return sc.isUserInRole("HOPS_ADMIN")
+}
