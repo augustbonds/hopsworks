@@ -28,6 +28,6 @@ class UserRest (
         @param:JsonProperty("uid") val uid: Int
 )
 
-fun fromUsers(user: Users): UserRest {
+fun UserRest(user: Users): UserRest {
     return UserRest(user.fname, user.lname, user.uid)
 }

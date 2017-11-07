@@ -52,8 +52,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.apiV2.projects.LimitedProjectViewKt.fromProject;
-
 @Path("/v2/projects")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "V2 Projects")
@@ -98,17 +96,17 @@ public class ProjectsResource {
     
     if(sc.isUserInRole("HOPS_ADMIN")){
       //Create full project views for admins
-      List<ProjectView> projectViews = new ArrayList<>();
+      List<ProjectRest> projectRests = new ArrayList<>();
       for (Project project : projectFacade.findAll()){
-        projectViews.add(new ProjectView(project));
+        projectRests.add(ProjectRestKt.ProjectRest(project));
       }
-      GenericEntity<List<ProjectView>> projects = new GenericEntity<List<ProjectView>>(projectViews){};
+      GenericEntity<List<ProjectRest>> projects = new GenericEntity<List<ProjectRest>>(projectRests){};
       return Response.ok(projects,MediaType.APPLICATION_JSON_TYPE).build();
     } else {
       //Create limited project views for everyone else
       List<LimitedProjectView> limitedProjectViews = new ArrayList<>();
       for (Project project : projectFacade.findAll()) {
-        limitedProjectViews.add(fromProject(project));
+        limitedProjectViews.add(LimitedProjectRestKt.LimitedProjectView(project));
       }
       GenericEntity<List<LimitedProjectView>> projects =
           new GenericEntity<List<LimitedProjectView>>(limitedProjectViews){};

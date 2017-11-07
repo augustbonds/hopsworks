@@ -19,7 +19,6 @@ package io.hops.hopsworks.apiV2.projects
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.hops.hopsworks.apiV2.users.UserRest
-import io.hops.hopsworks.apiV2.users.fromUsers
 import io.hops.hopsworks.common.dao.project.Project
 
 class LimitedProjectView(
@@ -29,7 +28,7 @@ class LimitedProjectView(
     @param:JsonProperty("owner") val owner: UserRest
 )
 
-fun fromProject(project: Project): LimitedProjectView {
-    val owner = fromUsers(project.owner)
+fun LimitedProjectView(project: Project): LimitedProjectView {
+    val owner = UserRest(project.owner)
     return LimitedProjectView(project.id, project.description, project.name, owner)
 }

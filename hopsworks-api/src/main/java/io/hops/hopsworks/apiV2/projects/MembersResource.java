@@ -34,8 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.apiV2.projects.MemberRestKt.fromProjectTeam;
-
 @Api("V2 Members")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -52,8 +50,7 @@ public class MembersResource {
   UserFacade userFacade;
   
   @Inject
-  private
-  ProjectMembersService projectMembersService;
+  private ProjectMembersService projectMembersService;
   
   private Integer projectId;
   
@@ -77,7 +74,7 @@ public class MembersResource {
     List<ProjectTeam> membersByProject = projectTeamFacade.findMembersByProject(projectFacade.find(projectId));
     List<MemberRest> result = new ArrayList<>();
     for (ProjectTeam projectTeam : membersByProject) {
-      result.add(fromProjectTeam(projectTeam));
+      result.add(MemberRestKt.MemberRest(projectTeam));
     }
     GenericEntity<List<MemberRest>> entity = new GenericEntity<List<MemberRest>>(result){};
     return Response.ok(entity, MediaType.APPLICATION_JSON_TYPE).build();
@@ -102,7 +99,7 @@ public class MembersResource {
   public Response getMember(@PathParam("id") Integer userId, @Context SecurityContext sc) throws AppException {
     for (ProjectTeam member : projectTeamFacade.findMembersByProject(projectFacade.find(projectId))){
       if (userId.equals(member.getUser().getUid())){
-        GenericEntity<MemberRest> result = new GenericEntity<MemberRest>(fromProjectTeam(member)){};
+        GenericEntity<MemberRest> result = new GenericEntity<MemberRest>(MemberRestKt.MemberRest(member)){};
         Response.ok(result, MediaType.APPLICATION_JSON_TYPE).build();
       }
     }
