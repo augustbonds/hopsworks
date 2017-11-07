@@ -15,38 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.apiV2.projects;
+package io.hops.hopsworks.apiV2.projects
 
-import io.hops.hopsworks.apiV2.users.UserView;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.hops.hopsworks.apiV2.users.UserRest
+import io.hops.hopsworks.apiV2.users.fromUsers
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam
 
-import javax.xml.bind.annotation.XmlRootElement;
+class MemberRest (
+    @param:JsonProperty("user") val user: UserRest,
+    @param:JsonProperty("role") val role: String
+)
 
-@XmlRootElement
-public class MemberView {
-  private UserView user;
-  private String role;
-  
-  public MemberView(){}
-  
-  public MemberView(ProjectTeam member){
-    user = new UserView(member.getUser());
-    role = member.getTeamRole();
-  }
-  
-  public UserView getUser() {
-    return user;
-  }
-  
-  public void setUser(UserView user) {
-    this.user = user;
-  }
-  
-  public String getRole() {
-    return role;
-  }
-  
-  public void setRole(String role) {
-    this.role = role;
-  }
+fun fromProjectTeam(projectTeam: ProjectTeam): MemberRest {
+    val user = projectTeam.user
+    return MemberRest(fromUsers(user), projectTeam.teamRole)
 }

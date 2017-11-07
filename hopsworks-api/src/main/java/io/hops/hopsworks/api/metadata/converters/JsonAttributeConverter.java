@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.persistence.AttributeConverter;
+
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +34,7 @@ public class JsonAttributeConverter<T extends Object> implements
   }
 
   // ObjectMapper is thread safe
-  private final static ObjectMapper objectMapper = new ObjectMapper();
+  private final static ObjectMapper objectMapper = new ObjectMapper().registerModule(new KotlinModule());
 
   private Logger log = LoggerFactory.getLogger(getClass());
 

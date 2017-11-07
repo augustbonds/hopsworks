@@ -17,7 +17,7 @@
  */
 package io.hops.hopsworks.apiV2.projects;
 
-import io.hops.hopsworks.apiV2.users.UserView;
+import io.hops.hopsworks.apiV2.users.UserRest;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
@@ -28,6 +28,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static io.hops.hopsworks.apiV2.users.UserRestKt.fromUsers;
 
 @XmlRootElement
 public class ProjectView {
@@ -40,7 +42,7 @@ public class ProjectView {
   private String ethicalStatus;
   private boolean archived;
   private String name;
-  private UserView owner;
+  private UserRest owner;
   private List<Activity> activity;
   private List<Dataset> datasets;
   
@@ -52,13 +54,15 @@ public class ProjectView {
     this.ethicalStatus = project.getEthicalStatus();
     this.created = project.getCreated();
     this.description = project.getDescription();
-    this.owner = new UserView(project.getOwner());
+    this.owner = fromUsers(project.getOwner());
     this.activity = new ArrayList<>(project.getActivityCollection());
     this.datasets = new ArrayList<>(project.getDatasetCollection());
     this.team = new ArrayList<>(project.getProjectTeamCollection());
     this.services = new ArrayList<>(project.getProjectServicesCollection());
     this.archived = project.getArchived();
   }
+  
+ 
   
   public List<ProjectTeam> getTeam() {
     return team;
@@ -112,7 +116,7 @@ public class ProjectView {
     return name;
   }
   
-  public UserView getOwner() {
+  public UserRest getOwner() {
     return owner;
   }
   
