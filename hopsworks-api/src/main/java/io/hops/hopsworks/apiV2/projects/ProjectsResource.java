@@ -96,17 +96,17 @@ public class ProjectsResource {
     
     if(sc.isUserInRole("HOPS_ADMIN")){
       //Create full project views for admins
-      List<ProjectRest> projectRests = new ArrayList<>();
+      List<ProjectView> projectRests = new ArrayList<>();
       for (Project project : projectFacade.findAll()){
-        projectRests.add(ProjectRestKt.ProjectRest(project));
+        projectRests.add(ProjectViewKt.ProjectView(project));
       }
-      GenericEntity<List<ProjectRest>> projects = new GenericEntity<List<ProjectRest>>(projectRests){};
+      GenericEntity<List<ProjectView>> projects = new GenericEntity<List<ProjectView>>(projectRests){};
       return Response.ok(projects,MediaType.APPLICATION_JSON_TYPE).build();
     } else {
       //Create limited project views for everyone else
       List<LimitedProjectView> limitedProjectViews = new ArrayList<>();
       for (Project project : projectFacade.findAll()) {
-        limitedProjectViews.add(LimitedProjectRestKt.LimitedProjectView(project));
+        limitedProjectViews.add(LimitedProjectViewKt.LimitedProjectView(project));
       }
       GenericEntity<List<LimitedProjectView>> projects =
           new GenericEntity<List<LimitedProjectView>>(limitedProjectViews){};

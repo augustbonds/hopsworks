@@ -72,11 +72,11 @@ public class MembersResource {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getAll(@Context SecurityContext sc){
     List<ProjectTeam> membersByProject = projectTeamFacade.findMembersByProject(projectFacade.find(projectId));
-    List<MemberRest> result = new ArrayList<>();
+    List<MemberView> result = new ArrayList<>();
     for (ProjectTeam projectTeam : membersByProject) {
-      result.add(MemberRestKt.MemberRest(projectTeam));
+      result.add(MemberViewKt.MemberView(projectTeam));
     }
-    GenericEntity<List<MemberRest>> entity = new GenericEntity<List<MemberRest>>(result){};
+    GenericEntity<List<MemberView>> entity = new GenericEntity<List<MemberView>>(result){};
     return Response.ok(entity, MediaType.APPLICATION_JSON_TYPE).build();
   }
   
@@ -99,7 +99,7 @@ public class MembersResource {
   public Response getMember(@PathParam("id") Integer userId, @Context SecurityContext sc) throws AppException {
     for (ProjectTeam member : projectTeamFacade.findMembersByProject(projectFacade.find(projectId))){
       if (userId.equals(member.getUser().getUid())){
-        GenericEntity<MemberRest> result = new GenericEntity<MemberRest>(MemberRestKt.MemberRest(member)){};
+        GenericEntity<MemberView> result = new GenericEntity<MemberView>(MemberViewKt.MemberView(member)){};
         Response.ok(result, MediaType.APPLICATION_JSON_TYPE).build();
       }
     }

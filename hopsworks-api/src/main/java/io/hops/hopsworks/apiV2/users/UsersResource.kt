@@ -19,8 +19,10 @@
  */
 package io.hops.hopsworks.apiV2.users
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.hops.hopsworks.api.filter.AllowedRoles
-import io.hops.hopsworks.common.dao.user.UserFacade
+import io.hops.hopsworks.apiV2.jsonOk
+import io.hops.hopsworks.common.dao.user.Users
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import javax.annotation.security.RolesAllowed
@@ -38,9 +40,9 @@ import javax.ws.rs.core.*
 @Api(value = "V2 Users", description = "Users Resource")
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-open class UsersResource {
+class UsersResource {
     @EJB
-    protected lateinit var userBean: UserFacade
+    private lateinit var userController: UserController
 
     @ApiOperation("Get a list of users in the cluster")
     @GET
@@ -49,10 +51,20 @@ open class UsersResource {
     @AllowedRoles(roles = arrayOf(AllowedRoles.ALL))
     fun findAll(@Context sc: SecurityContext): Response {
 
-        val users = userBean.findAllUsers()
-        val userViews = users.map { user -> UserRest(user.fname,user.lname,user.uid) }
+        val users = userController.findAll()
+        val userViews = users.map { user -> UserView(user.fname,user.lname,user.uid) }
 
-        val result = object : GenericEntity<List<UserRest>>(userViews) {}
-        return Response.ok(result, MediaType.APPLICATION_JSON_TYPE).build()
+        val result = object : GenericEntity<List<UserView>>(userViews) {}
+        return jsonOk(result)
     }
+}
+
+class UserView(
+        @param:JsonProperty("firstname") val firstname: String,
+        @param:JsonProperty("lastname") val lastname: String,
+        @param:JsonProperty("uid") val uid: Int
+)
+
+fun UserView(user: Users): UserView {
+    return UserView(user.fname, user.lname, user.uid)
 }

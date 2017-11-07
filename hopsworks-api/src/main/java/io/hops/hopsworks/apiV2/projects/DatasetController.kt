@@ -1,3 +1,5 @@
+package io.hops.hopsworks.apiV2.projects
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -7,9 +9,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,17 +17,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.apiV2.users
-
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.hops.hopsworks.common.dao.user.Users
-
-class UserRest (
-        @param:JsonProperty("firstname") val firstname: String,
-        @param:JsonProperty("lastname") val lastname: String,
-        @param:JsonProperty("uid") val uid: Int
-)
-
-fun UserRest(user: Users): UserRest {
-    return UserRest(user.fname, user.lname, user.uid)
-}
