@@ -82,7 +82,7 @@ public class ApplicationConfig extends ResourceConfig {
     //Projects & Datasets
     register(io.hops.hopsworks.apiV2.filter.ProjectAuthFilter.class);
     register(io.hops.hopsworks.apiV2.projects.ProjectsResource.class);
-    register(io.hops.hopsworks.apiV2.projects.DataSetsResource.class);
+    register(io.hops.hopsworks.apiV2.projects.DatasetsResource.class);
     register(io.hops.hopsworks.apiV2.projects.MembersResource.class);
     register(io.hops.hopsworks.apiV2.projects.BlobsResource.class);
     register(PathValidatorV2.class);

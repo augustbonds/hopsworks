@@ -42,13 +42,17 @@ import static io.hops.hopsworks.apiV2.projects.MemberRestKt.fromProjectTeam;
 public class MembersResource {
   
   @EJB
+  private
   ProjectTeamFacade projectTeamFacade;
   @EJB
+  private
   ProjectFacade projectFacade;
   @EJB
+  private
   UserFacade userFacade;
   
   @Inject
+  private
   ProjectMembersService projectMembersService;
   
   private Integer projectId;

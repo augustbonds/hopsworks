@@ -36,7 +36,7 @@ import javax.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.apiV2.Util.except;
+import static io.hops.hopsworks.apiV2.UtilKt.except;
 
 @Api("V2 Messages")
 @RequestScoped

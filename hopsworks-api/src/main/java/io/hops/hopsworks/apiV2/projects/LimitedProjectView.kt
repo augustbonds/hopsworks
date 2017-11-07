@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,26 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.apiV2;
+package io.hops.hopsworks.apiV2.projects
 
-import io.hops.hopsworks.common.exception.AppException;
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.hops.hopsworks.apiV2.users.UserRest
+import io.hops.hopsworks.apiV2.users.fromUsers
+import io.hops.hopsworks.common.dao.project.Project
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.net.URI;
+class LimitedProjectView(
+    @param:JsonProperty("projectId") val projectId: Int,
+    @param:JsonProperty("description") val description: String,
+    @param:JsonProperty("name") val name: String,
+    @param:JsonProperty("owner") val owner: UserRest
+)
 
-public class Util {
-  
-  public static void except(Response.Status status, String msg)
-      throws AppException {
-    throw new AppException(status.getStatusCode(), msg);
-  }
-  
-  public static Response jsonOk(Object entity){
-    return Response.ok(entity).type(MediaType.APPLICATION_JSON_TYPE).build();
-  }
-  
-  public static Response jsonCreated(URI location, Object entity){
-    return Response.created(location).entity(entity).type(MediaType.APPLICATION_JSON_TYPE).build();
-  }
+fun fromProject(project: Project): LimitedProjectView {
+    val owner = fromUsers(project.owner)
+    return LimitedProjectView(project.id, project.description, project.name, owner)
 }

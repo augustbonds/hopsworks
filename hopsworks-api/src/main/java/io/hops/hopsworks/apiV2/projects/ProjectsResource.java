@@ -52,6 +52,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static io.hops.hopsworks.apiV2.projects.LimitedProjectViewKt.fromProject;
+
 @Path("/v2/projects")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "V2 Projects")
@@ -82,7 +84,7 @@ public class ProjectsResource {
   @Inject
   private MembersResource members;
   @Inject
-  private DataSetsResource dataSets;
+  private DatasetsResource dataSets;
   @Inject
   private DelaProjectService delaService;
   
@@ -106,7 +108,7 @@ public class ProjectsResource {
       //Create limited project views for everyone else
       List<LimitedProjectView> limitedProjectViews = new ArrayList<>();
       for (Project project : projectFacade.findAll()) {
-        limitedProjectViews.add(new LimitedProjectView(project));
+        limitedProjectViews.add(fromProject(project));
       }
       GenericEntity<List<LimitedProjectView>> projects =
           new GenericEntity<List<LimitedProjectView>>(limitedProjectViews){};
@@ -356,7 +358,7 @@ public class ProjectsResource {
   
   @Path("/{id}/datasets")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public DataSetsResource getDataSets(@PathParam("id") Integer id, @Context SecurityContext sc) throws AppException {
+  public DatasetsResource getDataSets(@PathParam("id") Integer id, @Context SecurityContext sc) throws AppException {
     Project project = projectController.findProjectById(id);
     dataSets.setProjectId(project.getId());
     return dataSets;

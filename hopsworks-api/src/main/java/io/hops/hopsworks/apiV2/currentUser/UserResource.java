@@ -2,7 +2,6 @@ package io.hops.hopsworks.apiV2.currentUser;
 
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.apiV2.Util;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserDTO;
@@ -43,7 +42,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.apiV2.Util.except;
+import static io.hops.hopsworks.apiV2.UtilKt.except;
+import static io.hops.hopsworks.apiV2.UtilKt.jsonOk;
+
 
 @Path("/v2/user")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -82,7 +83,7 @@ public class UserResource {
 
     UserDTO userDTO = new UserDTO(user);
 
-    return Util.jsonOk(userDTO);
+    return jsonOk(userDTO);
   }
 
   @POST
@@ -103,7 +104,7 @@ public class UserResource {
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
     json.setData(userDTO);
 
-    return Util.jsonOk(userDTO);
+    return jsonOk(userDTO);
   }
 
   @POST
@@ -123,7 +124,7 @@ public class UserResource {
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
 
-    return Util.jsonOk(json);
+    return jsonOk(json);
   }
 
   @POST
@@ -141,7 +142,7 @@ public class UserResource {
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
 
-    return Util.jsonOk(json);
+    return jsonOk(json);
   }
 
   @POST
@@ -158,7 +159,7 @@ public class UserResource {
     if (user.getTwoFactor() == twoFactor) {
       json.setSuccessMessage("No change made.");
       json.setStatus("OK");
-      return Util.jsonOk(json);
+      return jsonOk(json);
     }
 
     qrCode = userController.changeTwoFactor(user, password, req);
@@ -168,7 +169,7 @@ public class UserResource {
       json.setSuccessMessage("Tow factor authentication disabled.");
     }
     json.setStatus("OK");
-    return Util.jsonOk(json);
+    return jsonOk(json);
   }
 
   @POST
@@ -196,7 +197,7 @@ public class UserResource {
               "Two factor disabled.");
     }
     json.setStatus("OK");
-    return Util.jsonOk(json);
+    return jsonOk(json);
   }
 
   @POST
@@ -211,7 +212,7 @@ public class UserResource {
     int id = user.getUid();
     SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.
             getPublicKey());
-    return Util.jsonOk(dto);
+    return jsonOk(dto);
   }
 
   @DELETE
@@ -227,7 +228,7 @@ public class UserResource {
     userController.removeSshKey(id, name);
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SSH_KEY_REMOVED);
-    return Util.jsonOk(json);
+    return jsonOk(json);
   }
 
   @GET
@@ -242,7 +243,7 @@ public class UserResource {
 
     GenericEntity<List<SshKeyDTO>> sshKeyViews
             = new GenericEntity<List<SshKeyDTO>>(sshKeys) {};
-    return Util.jsonOk(sshKeyViews);
+    return jsonOk(sshKeyViews);
 
   }
 
@@ -269,7 +270,7 @@ public class UserResource {
       }
     }
 
-    return Util.jsonOk(userDTO);
+    return jsonOk(userDTO);
   }
   
   @Path("/messages")
@@ -285,6 +286,6 @@ public class UserResource {
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
         = new GenericEntity<List<Activity>>(activityDetails) {};
-    return Util.jsonOk(projectActivities);
+    return jsonOk(projectActivities);
   }
 }

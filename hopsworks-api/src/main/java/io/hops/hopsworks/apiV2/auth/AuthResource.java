@@ -98,7 +98,7 @@ public class AuthResource {
       @FormParam("securityAnswer") String securityAnswer,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    return recoverPassword(email, securityQuestion, securityAnswer, sc, req);
+    return authV1.recoverPassword(email, securityQuestion, securityAnswer, sc, req);
   }
   
 }
