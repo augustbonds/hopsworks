@@ -30,10 +30,10 @@ class UserController {
     private lateinit var userFacade: UserFacade
 
     fun findAll() :List<Users> {
-        return userFacade.findAll()
+        return userFacade.findAll() ?: listOf()
     }
 
-    fun findByEmail(name: String): Users {
+    fun findByEmail(name: String): Users? {
         return userFacade.findByEmail(name)
     }
 }

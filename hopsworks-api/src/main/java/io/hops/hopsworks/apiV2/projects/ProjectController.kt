@@ -2,6 +2,7 @@ package io.hops.hopsworks.apiV2.projects
 
 import io.hops.hopsworks.common.dao.project.Project
 import io.hops.hopsworks.common.dao.project.ProjectFacade
+import io.hops.hopsworks.common.project.ProjectDTO
 import javax.ejb.EJB
 import javax.ejb.Stateless
 
@@ -28,6 +29,15 @@ class ProjectController{
     private lateinit var projectFacade: ProjectFacade
 
     fun getAll(): List<Project> {
-        return projectFacade.findAll()
+        return projectFacade.findAll()?: listOf()
+    }
+
+    fun createProject() {
+
+    }
+
+    private fun toProjectDTO(projectView: ProjectView): ProjectDTO{
+        projectView.team
+        ProjectDTO(projectView.projectId, projectView.name, projectView.owner)
     }
 }

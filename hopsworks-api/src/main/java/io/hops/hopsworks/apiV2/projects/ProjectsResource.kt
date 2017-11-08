@@ -2,18 +2,23 @@ package io.hops.hopsworks.apiV2.projects
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.hops.hopsworks.api.filter.AllowedRoles
+import io.hops.hopsworks.apiV2.except
 import io.hops.hopsworks.apiV2.isAdmin
+import io.hops.hopsworks.apiV2.isLoggedIn
 import io.hops.hopsworks.apiV2.jsonOk
 import io.hops.hopsworks.apiV2.users.UserController
 import io.hops.hopsworks.apiV2.users.UserView
+import io.hops.hopsworks.common.constants.message.ResponseMessages
 import io.hops.hopsworks.common.dao.dataset.Dataset
 import io.hops.hopsworks.common.dao.project.Project
 import io.hops.hopsworks.common.dao.project.service.ProjectServices
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam
 import io.hops.hopsworks.common.dao.user.activity.Activity
+import io.hops.hopsworks.common.exception.AppException
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import java.util.*
+import java.util.logging.Logger
 import javax.annotation.security.RolesAllowed
 import javax.ejb.EJB
 import javax.ejb.Stateless
@@ -53,6 +58,9 @@ class ProjectsResource {
     @EJB
     private lateinit var userController: UserController
 
+    private val logger = Logger.getLogger(ProjectsResourceOld::class.java.name)
+
+
     @GET
     @ApiOperation(value = "Get a list of projects")
     @AllowedRoles(roles = arrayOf(AllowedRoles.ALL))
@@ -74,20 +82,38 @@ class ProjectsResource {
     @POST
     @ApiOperation(value = "Create a project")
     @AllowedRoles(roles = arrayOf(AllowedRoles.ALL))
-    fun createProject(projectView: ProjectView?, @Context sc: SecurityContext?, @Context req: HttpServletRequest?,
+    fun createProject(projectView: ProjectView?, @Context sc: SecurityContext, @Context req: HttpServletRequest,
                       @QueryParam("template") starterType: String?): Response {
-        if (sc == null || sc.userPrincipal){
-
-        }
         starterType?.let{
             if (!it.isEmpty()){
                 return createStarterProject(sc, it)
             }
         }
 
-        val user = userController.findByEmail(sc.userPrincipal.name)
+        val email = sc.userPrincipal.name;
+        val user = userController.findByEmail(email)
+        if (user == null){
+            logger.severe("Problem finding the user $email")
+            throw AppException(Response.Status.INTERNAL_SERVER_ERROR, "Could not create project.")
+        }
 
 
+//
+//        List<String> failedMembers = new ArrayList<>();
+//        Project project = projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
+//
+//        JsonResponse json = new JsonResponse();
+//        json.setStatus("201");// Created
+//        json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
+//
+//        if (!failedMembers.isEmpty()) {
+//            json.setFieldErrors(failedMembers);
+//        }
+//
+//        URI uri = UriBuilder.fromResource(ProjectsResourceOld.class).path("{id}").build(project.getId());
+//        logger.info("Created uri: " + uri.toString());
+//
+//        return Response.created(uri).entity(json).build();
 
     }
 
@@ -97,11 +123,11 @@ class ProjectsResource {
 }
 
 class ProjectView(
-        @param:JsonProperty("projectId") var projectId: Int,
-        @param:JsonProperty("description") var description: String,
-        @param:JsonProperty("created") var created: Date,
-        @param:JsonProperty("ethicalStatus") var ethicalStatus: String,
-        @param:JsonProperty("isArchived") var isArchived: Boolean,
+        @param:JsonProperty("projectId") val projectId: Int,
+        @param:JsonProperty("description") val description: String,
+        @param:JsonProperty("created") val created: Date,
+        @param:JsonProperty("ethicalStatus") val ethicalStatus: String,
+        @param:JsonProperty("isArchived") val isArchived: Boolean,
         @param:JsonProperty("name") val name: String,
         @param:JsonProperty("owner") val owner: UserView,
         @param:JsonProperty("team") val team: List<ProjectTeam>,

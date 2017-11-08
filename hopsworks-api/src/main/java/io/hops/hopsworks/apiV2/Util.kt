@@ -41,3 +41,7 @@ fun jsonCreated(location: URI, entity: Any): Response {
 fun isAdmin(sc: SecurityContext): Boolean {
     return sc.isUserInRole("HOPS_ADMIN")
 }
+
+fun isLoggedIn(sc: SecurityContext): Boolean {
+    return sc.userPrincipal.name != null && !sc.userPrincipal.name.isEmpty()
+}
