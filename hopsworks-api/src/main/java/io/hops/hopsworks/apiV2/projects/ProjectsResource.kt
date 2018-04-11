@@ -115,10 +115,11 @@ class ProjectsResource {
 //
 //        return Response.created(uri).entity(json).build();
 
+        return Response.ok().build()
     }
 
     private fun createStarterProject(sc: SecurityContext, starterType: String) : Response {
-
+        return Response.ok().build()
     }
 }
 

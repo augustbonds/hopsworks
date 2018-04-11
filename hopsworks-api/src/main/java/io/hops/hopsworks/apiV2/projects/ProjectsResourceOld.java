@@ -106,7 +106,10 @@ public class ProjectsResourceOld {
       //Create limited project views for everyone else
       List<LimitedProjectView> limitedProjectViews = new ArrayList<>();
       for (Project project : projectFacade.findAll()) {
-        limitedProjectViews.add(LimitedProjectViewKt.LimitedProjectView(project));
+        
+        
+        //limitedProjectViews.add(LimitedProjectViewTk.LimitedProjectView
+        //    (project));
       }
       GenericEntity<List<LimitedProjectView>> projects =
           new GenericEntity<List<LimitedProjectView>>(limitedProjectViews){};

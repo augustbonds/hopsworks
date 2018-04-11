@@ -40,14 +40,11 @@ import java.util.logging.Logger;
 public class MembersResource {
   
   @EJB
-  private
-  ProjectTeamFacade projectTeamFacade;
+  private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private
-  ProjectFacade projectFacade;
+  private ProjectFacade projectFacade;
   @EJB
-  private
-  UserFacade userFacade;
+  private UserFacade userFacade;
   
   @Inject
   private ProjectMembersService projectMembersService;

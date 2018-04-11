@@ -24,20 +24,11 @@ import javax.ejb.Stateless
  * limitations under the License.
  */
 @Stateless
-class ProjectController{
+class ProjectController {
     @EJB
     private lateinit var projectFacade: ProjectFacade
 
     fun getAll(): List<Project> {
-        return projectFacade.findAll()?: listOf()
-    }
-
-    fun createProject() {
-
-    }
-
-    private fun toProjectDTO(projectView: ProjectView): ProjectDTO{
-        projectView.team
-        ProjectDTO(projectView.projectId, projectView.name, projectView.owner)
+        return projectFacade.findAll() ?: listOf()
     }
 }
